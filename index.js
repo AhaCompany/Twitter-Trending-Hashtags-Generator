@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 
-app.use(cors()); // To allow cross-origin requests from Vue.js front-end
+app.use(cors());
 
 // Default configuration
 const defaultConfig = {
