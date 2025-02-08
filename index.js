@@ -82,11 +82,13 @@ app.get('/api/generate-hashtags', async (req, res) => {
         // Navigate to the target website
         await page.goto('https://trends24.in/', { waitUntil: 'networkidle2' });
         console.log("Page loaded.");
-
+        
         // Handle cookie consent
-        const cookieConsentSelector = '.fc-button.fc-cta-consent.fc-primary-button'
-        await page.waitForSelector(cookieConsentSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
-        await page.click(cookieConsentSelector);
+        // Wait for the "AGREE" button to appear with the text
+        // const agreeButtonSelector = 'button span:has-text("AGREE")';
+        const agreeButtonSelector = 'button.css-47sehv span'; // Target button with 'AGREE' text
+        await page.waitForSelector(agreeButtonSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
+        await page.click(agreeButtonSelector);
         console.log("Cookie consent button clicked.");
 
         // Wait for the "Table" tab to be clickable

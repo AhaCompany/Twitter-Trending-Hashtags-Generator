@@ -65,9 +65,9 @@ exports.handler = async (event, context) => {
     try {
         await page.goto('https://trends24.in/', { waitUntil: 'networkidle2' });
 
-        const cookieConsentSelector = '.fc-button.fc-cta-consent.fc-primary-button';
-        await page.waitForSelector(cookieConsentSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
-        await page.click(cookieConsentSelector);
+        const agreeButtonSelector = 'button.css-47sehv span';
+        await page.waitForSelector(agreeButtonSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
+        await page.click(agreeButtonSelector);        
 
         const tableTabSelector = '#tab-link-table';
         await page.waitForSelector(tableTabSelector, { timeout: config.TIMEOUT_COOKIE_CONSENT });
