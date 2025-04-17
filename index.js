@@ -9,8 +9,8 @@ app.use(cors());
 
 // Default configuration
 const defaultConfig = {
-    "TWEET_MAX_CHARS": 280, // Default
-    "ENGLISH_ONLY": true, // Boolean true or false
+    "TWEET_MAX_CHARS": 100000, // Default
+    "ENGLISH_ONLY": false, // Boolean true or false
     "TIMEOUT_PAGE_LOAD": 3000,
     "TIMEOUT_COOKIE_CONSENT": 1000,
     "TIMEOUT_TAB_CLICK": 1000
@@ -84,12 +84,26 @@ app.get('/api/generate-hashtags', async (req, res) => {
         console.log("Page loaded.");
         
         // Handle cookie consent
-        // Wait for the "AGREE" button to appear with the text
-        // const agreeButtonSelector = 'button span:has-text("AGREE")';
-        const agreeButtonSelector = 'button.css-47sehv span'; // Target button with 'AGREE' text
-        await page.waitForSelector(agreeButtonSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
-        await page.click(agreeButtonSelector);
-        console.log("Cookie consent button clicked.");
+        try {
+            const agreeButtonSelector = 'button span, button';
+            await page.waitForSelector(agreeButtonSelector, { timeout: config.TIMEOUT_PAGE_LOAD });
+            const buttons = await page.$$(agreeButtonSelector);
+            let clicked = false;
+            for (const btn of buttons) {
+                const text = await (await btn.getProperty('textContent')).jsonValue();
+                if (text && text.trim().toUpperCase() === 'AGREE') {
+                    await btn.click();
+                    console.log("Cookie consent button clicked.");
+                    clicked = true;
+                    break;
+                }
+            }
+            if (!clicked) {
+                console.log("No AGREE button found, continue...");
+            }
+        } catch (e) {
+            console.log("No cookie consent button found or timeout, continue...");
+        }
 
         // Wait for the "Table" tab to be clickable
         const tableTabSelector = '#tab-link-table';
