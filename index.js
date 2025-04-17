@@ -65,8 +65,8 @@ const generateHashtags = (trendingTopics, ENGLISH_ONLY, HASHTAG_ONLY) => {
 app.get('/api/generate-hashtags', async (req, res) => {
     // Get parameters from query or use default values
     const config = {
-        HASHTAG_ONLY: req.query.HASHTAG_ONLY || defaultConfig.HASHTAG_ONLY,
-        ENGLISH_ONLY: req.query.ENGLISH_ONLY === 'true' ? true : defaultConfig.ENGLISH_ONLY,
+        HASHTAG_ONLY: (typeof req.query.HASHTAG_ONLY !== 'undefined') ? (req.query.HASHTAG_ONLY === 'true') : defaultConfig.HASHTAG_ONLY,
+        ENGLISH_ONLY: (typeof req.query.ENGLISH_ONLY !== 'undefined') ? (req.query.ENGLISH_ONLY === 'true') : defaultConfig.ENGLISH_ONLY,
         TIMEOUT_PAGE_LOAD: req.query.TIMEOUT_PAGE_LOAD || defaultConfig.TIMEOUT_PAGE_LOAD,
         TIMEOUT_COOKIE_CONSENT: req.query.TIMEOUT_COOKIE_CONSENT || defaultConfig.TIMEOUT_COOKIE_CONSENT,
         TIMEOUT_TAB_CLICK: req.query.TIMEOUT_TAB_CLICK || defaultConfig.TIMEOUT_TAB_CLICK
