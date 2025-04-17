@@ -13,7 +13,7 @@ const defaultConfig = {
     "TIMEOUT_PAGE_LOAD": 3000,
     "TIMEOUT_COOKIE_CONSENT": 1000,
     "TIMEOUT_TAB_CLICK": 1000,
-    "HASHTAG_ONLY": false, // Boolean true or false
+    "HASHTAG_ONLY": true, // Boolean true or false
 };
 
 // Function to filter English trending topics
@@ -149,9 +149,10 @@ app.get('/api/generate-hashtags', async (req, res) => {
             // Remove commas and parse as integer
             item.tweetCountNum = item.tweetCount ? parseInt(item.tweetCount.replace(/,/g, '')) : 0;
         });
-        tableData.sort((a, b) => b.tweetCountNum - a.tweetCountNum);
-        //console.log(tableData);
-        const hashtags = generateHashtags(tableData, config.ENGLISH_ONLY, config.HASHTAG_ONLY);
+        // Lọc chỉ lấy những chủ đề có tweetCountNum > 1000
+        const filteredTableData = tableData.filter(item => item.tweetCountNum > 1000);
+        filteredTableData.sort((a, b) => b.tweetCountNum - a.tweetCountNum);
+        const hashtags = generateHashtags(filteredTableData, config.ENGLISH_ONLY, config.HASHTAG_ONLY);
 
         // Send the extracted data along with hashtags in the response
         res.json({ hashtags });
