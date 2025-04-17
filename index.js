@@ -13,7 +13,7 @@ const defaultConfig = {
     "TIMEOUT_PAGE_LOAD": 3000,
     "TIMEOUT_COOKIE_CONSENT": 1000,
     "TIMEOUT_TAB_CLICK": 1000,
-    "HASHTAG_ONLY": true, // Boolean true or false
+    "HASHTAG_ONLY": false, // Boolean true or false
 };
 
 // Function to filter English trending topics
@@ -35,9 +35,17 @@ const createHashtags = (trends, HASHTAG_ONLY = false) => {
     for (let trend of sortedTrends) {
         const trendText = trend.topic;
         // Convert topic to a hashtag (keep letters, numbers, underscores, and Unicode letters)
-        const cleanTrend = trendText.replace(/\s+/g, '').replace(/[^\w\u4e00-\u9fff\u0600-\u06ff#]/g, '');
-        // Bỏ qua nếu cleanTrend rỗng hoặc chỉ là "#"
-        if (!cleanTrend || cleanTrend === '#') continue;
+        // Clean: giữ ký tự chữ, số, gạch dưới, chữ cái unicode, và giữ nguyên # nếu là ký tự đầu tiên
+        let cleanTrend = trendText.trim();
+        // Nếu bắt đầu bằng # thì giữ lại, chỉ loại bỏ khoảng trắng, KHÔNG loại ký tự unicode sau #
+        if (cleanTrend.startsWith('#')) {
+            // Loại bỏ khoảng trắng sau #, giữ nguyên mọi ký tự unicode
+            cleanTrend = '#' + cleanTrend.slice(1).replace(/\s+/g, '');
+        } else {
+            cleanTrend = cleanTrend.replace(/[^\w\u4e00-\u9fff\u0600-\u06ff]/g, '');
+        }
+        // Bỏ qua nếu cleanTrend rỗng hoặc chỉ là "#" hoặc "#__"
+        if (!cleanTrend || cleanTrend === '#' || cleanTrend === '#__') continue;
 
         if (HASHTAG_ONLY && trendText.startsWith('#')) {
             hashtags.push(cleanTrend);
