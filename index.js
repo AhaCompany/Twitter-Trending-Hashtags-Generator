@@ -9,11 +9,11 @@ app.use(cors());
 
 // Default configuration
 const defaultConfig = {
-    "TWEET_MAX_CHARS": 100000, // Default
     "ENGLISH_ONLY": false, // Boolean true or false
     "TIMEOUT_PAGE_LOAD": 3000,
     "TIMEOUT_COOKIE_CONSENT": 1000,
-    "TIMEOUT_TAB_CLICK": 1000
+    "TIMEOUT_TAB_CLICK": 1000,
+    "HASHTAG_ONLY": true, // Boolean true or false
 };
 
 // Function to filter English trending topics
@@ -26,48 +26,46 @@ const filterEnglishTrends = (trends) => {
 };
 
 // Function to create hashtags within a character limit
-const createHashtags = (trends, maxChars = 280) => {
-    // Sort trends by their popularity ('count') in descending order
-    const sortedTrends = trends.sort((a, b) => parseInt(b.count) - parseInt(a.count));
+const createHashtags = (trends, HASHTAG_ONLY = false) => {
+    // Sort trends by their popularity ('tweetCount') in descending order
+    const sortedTrends = trends.sort((a, b) => parseInt(b.tweetCountNum) - parseInt(a.tweetCountNum));
 
     let hashtags = [];
-    let totalChars = 0;
 
     for (let trend of sortedTrends) {
         const trendText = trend.topic;
         // Convert topic to a hashtag (keep letters, numbers, underscores, and Unicode letters)
-        // const cleanTrend = trendText.replace(/[^a-zA-Z0-9_#]/g, '');
         const cleanTrend = trendText.replace(/\s+/g, '').replace(/[^\w\u4e00-\u9fff\u0600-\u06ff#]/g, '');
-        const hashtag = trendText.startsWith('#') ? cleanTrend : '#' + cleanTrend;
-        const hashtagLength = hashtag.length;
+        // Bỏ qua nếu cleanTrend rỗng hoặc chỉ là "#"
+        if (!cleanTrend || cleanTrend === '#') continue;
 
-        if (totalChars + hashtagLength <= maxChars) {
+        if (HASHTAG_ONLY && trendText.startsWith('#')) {
+            hashtags.push(cleanTrend);
+        } else if (HASHTAG_ONLY === false) {
+            const hashtag = trendText.startsWith('#') ? cleanTrend : '#' + cleanTrend;
             hashtags.push(hashtag);
-            totalChars += hashtagLength + 1; // Add 1 for space between hashtags
-        } else {
-            break;
         }
     }
 
-    return hashtags.join(' ');
+    return hashtags;
 };
 
 // Function to generate hashtags based on the table data
-const generateHashtags = (trendingTopics, ENGLISH_ONLY, TWEET_MAX_CHARS) => {
+const generateHashtags = (trendingTopics, ENGLISH_ONLY, HASHTAG_ONLY) => {
     let filteredTrends = trendingTopics;
 
     if (ENGLISH_ONLY) {
         filteredTrends = filterEnglishTrends(trendingTopics);
     }
 
-    const hashtags = createHashtags(filteredTrends, TWEET_MAX_CHARS);
+    const hashtags = createHashtags(filteredTrends, HASHTAG_ONLY);
     return hashtags;
 };
 
 app.get('/api/generate-hashtags', async (req, res) => {
     // Get parameters from query or use default values
     const config = {
-        TWEET_MAX_CHARS: req.query.TWEET_MAX_CHARS || defaultConfig.TWEET_MAX_CHARS,
+        HASHTAG_ONLY: req.query.HASHTAG_ONLY || defaultConfig.HASHTAG_ONLY,
         ENGLISH_ONLY: req.query.ENGLISH_ONLY === 'true' ? true : defaultConfig.ENGLISH_ONLY,
         TIMEOUT_PAGE_LOAD: req.query.TIMEOUT_PAGE_LOAD || defaultConfig.TIMEOUT_PAGE_LOAD,
         TIMEOUT_COOKIE_CONSENT: req.query.TIMEOUT_COOKIE_CONSENT || defaultConfig.TIMEOUT_COOKIE_CONSENT,
@@ -138,8 +136,14 @@ app.get('/api/generate-hashtags', async (req, res) => {
             return data;
         });
 
-        // Generate hashtags from the table data
-        const hashtags = generateHashtags(tableData, config.ENGLISH_ONLY, config.TWEET_MAX_CHARS);
+        // Convert tweetCount to number and sort tableData by tweetCount descending
+        tableData.forEach(item => {
+            // Remove commas and parse as integer
+            item.tweetCountNum = item.tweetCount ? parseInt(item.tweetCount.replace(/,/g, '')) : 0;
+        });
+        tableData.sort((a, b) => b.tweetCountNum - a.tweetCountNum);
+        //console.log(tableData);
+        const hashtags = generateHashtags(tableData, config.ENGLISH_ONLY, config.HASHTAG_ONLY);
 
         // Send the extracted data along with hashtags in the response
         res.json({ hashtags });
